@@ -1,11 +1,26 @@
+
 GET http://localhost:3000/
+
 ###
+
 POST http://localhost:3000/
 Content-Type: application/json
 
 {
-     "titulo": "ksdjlksd",
-     "img": "lskjdflsdkjf",
-     "enlace": "lksjdflks"
+     "titulo": "hola",
+     "enlace": "caracola"
 }
 
+###
+
+PUT http://localhost:3000/0
+Content-Type: application/json
+
+{
+     "titulo": "prueba PUT"
+}
+
+###
+
+DELETE http://localhost:3000/1
+Content-Type: application/json

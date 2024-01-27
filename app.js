@@ -1,11 +1,9 @@
 const express = require('express')
-const fs = require('fs');
-const { router, guardarDatos } = require('./scraping')
 const app = express()
-let noticias
+const fs = require('fs')
+const { scraping, guardarDatos } = require('./scraping')
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+let noticias = []
 
 function leerDatos() {
     try {
@@ -16,22 +14,30 @@ function leerDatos() {
     }
 }
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
+// Read
 app.get('/', (req, res) => {
-    leerDatos()
-    res.send(noticias)
+    noticias.length !== 0
+        ? res.json(noticias)
+        : res.redirect('/scraping')
 })
 
-app.get('/scraping', router, (req, res) => {
-    res.send('Scraping completado');
+app.get('/scraping', scraping, (req, res) => {
+    leerDatos()
+    res.redirect('/')
 })
 
 app.get('/:index', (req, res) => {
     const index = req.params.index
     leerDatos()
     res.json(noticias[index])
-    res.send(noticias[index])
 })
 
+
+// Create
 app.post('/', (req, res) => {
     leerDatos()
     const nuevaNoticia = {
@@ -40,23 +46,42 @@ app.post('/', (req, res) => {
         descripcion: req.body.descripcion || '',
         enlace: req.body.enlace || ''
     }
-
     noticias.push(nuevaNoticia)
     guardarDatos(noticias)
-    
+    res.json(noticias)
 })
 
-app.delete('/:index', (req, res) => {
-    const index = req.params.index
+
+// Update
+app.put('/:index', (req, res) => {
     leerDatos()
+    const index = req.params.index
 
-    noticias.splice(index, 1)
-
-
-    res.json(noticias[index])
-    res.send(noticias[index])
+    if (index) {
+        noticias[index] = { ...req.body }
+        guardarDatos(noticias)
+        res.json(noticias)
+    } else { res.status(404).json({ Error: "Índice no encontrado" }) }
 })
 
+
+// Delete
+app.delete('/:index', (req, res) => {
+    leerDatos()
+    const index = req.params.index
+
+    if (index) {
+        noticias.splice(index, 1)
+        guardarDatos(noticias)
+        res.json(noticias)
+    } else { res.status(404).json({ Error: "Índice no encontrado" }) }
+
+})
+
+
+app.use((req, res) => {
+    res.status(404).json({ error: "Página no encontrada" })
+})
 
 app.listen(3000, () => {
     console.log('Express está escuchando en el puerto http://localhost:3000/')

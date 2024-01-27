@@ -1,19 +1,16 @@
-const express = require('express')
-const router = express.Router()
-
 const axios = require('axios');
 const cheerio = require('cheerio');
-const fs = require('fs');
+const fs = require('fs')
+
 const url = 'https://elpais.com/ultimas-noticias/'
 
-
-router.use('/', async (req, res) => {
+async function scraping(req, res, next) {
     try {
         const response = await axios.get(url)
         const html = response.data
         const $ = cheerio.load(html)
-        let noticias = [];
 
+        let noticias = [];
         $('article').each((index, element) => {
             const noticia = {
                 titulo: $(element).find('h2').text().trim(),
@@ -23,14 +20,15 @@ router.use('/', async (req, res) => {
             };
             noticias.push(noticia)
         })
+
         guardarDatos(noticias)
     }
     catch (error) { console.log(error) }
-})
+    next()
+}
 
 function guardarDatos(noticias) {
     fs.writeFileSync('noticias.json', JSON.stringify(noticias, null, 2));
 }
 
-
-module.exports = { router, guardarDatos }
+module.exports = { scraping, guardarDatos }
